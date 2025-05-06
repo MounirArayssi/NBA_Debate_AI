@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NBA Debate AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    pre {
+     white-space: pre-wrap;
+    word-wrap: break-word;
+    }
+    #chat::-webkit-scrollbar {
+      width: 8px;
+    }
+    #chat::-webkit-scrollbar-track {
+      background-color: #f1f1f1;
+    }
+    #chat::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 4px;
+    }
+    #chat::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-black dark:bg-gray-900 dark:text-white transition-colors min-h-screen flex flex-col items-center p-4">
+  <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col gap-4">
+    <div class="flex justify-between items-center">
+      <h1 class="text-3xl font-bold text-blue-700 dark:text-blue-400">🏀 NBA Debate AI</h1>
+      <button onclick="toggleDarkMode()" class="text-sm text-gray-500 dark:text-gray-300">🌙 Toggle Dark Mode</button>
+    </div>
+
+    <div id="chat" class="flex flex-col gap-3 overflow-y-auto max-h-[400px] px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 transition-colors"></div>
+
+    <div class="flex flex-col sm:flex-row gap-2">
+      <input type="text" id="topic" class="border rounded-lg p-2 w-full sm:w-1/2 dark:bg-gray-600 dark:text-white" placeholder="Debate Topic (e.g., Jokic MVP)" />
+      <textarea id="argument" rows="3" class="border rounded-lg p-2 w-full sm:w-1/2 dark:bg-gray-600 dark:text-white" placeholder="Your argument here..."></textarea>
+    </div>
+
+    <select id="tone" class="border p-2 rounded w-full sm:w-1/2 dark:bg-gray-600 dark:text-white">
+      <option value="trash">🔥 Trash Talk</option>
+      <option value="analyst">🧠 Analyst</option>
+      <option value="stats">🤓 Stats Only</option>
+    </select>
+
+    <div class="flex items-center gap-2">
+      <input id="topicName" placeholder="Save as..." class="border p-2 rounded w-full sm:w-1/2 dark:bg-gray-600 dark:text-white" />
+      <button onclick="saveTopic()" class="bg-green-600 text-white px-3 py-2 rounded">💾 Save</button>
+      <span id="saveStatus" class="text-xs text-green-600 hidden">Saved ✅</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <select id="topicList" class="border p-2 rounded w-full sm:w-1/2 dark:bg-gray-600 dark:text-white" onchange="loadTopic()">
+        <option value="">📂 Load Previous Topic</option>
+      </select>
+      <button onclick="clearChat()" class="bg-red-500 text-white px-3 py-2 rounded">🧹 Clear</button>
+    </div>
+
+    <button onclick="sendDebate()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-300">Challenge the AI</button>
+  </div>
+
+  <footer class="mt-8 text-center text-gray-500 text-sm dark:text-gray-400">
+    Powered by FastAPI & OpenAI | Built by Mounir Arayssi
+  </footer>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const saveStatus = document.getElementById("saveStatus");
+    let messages = [];
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    function addMessage(role, text, animated = false) {
+      const bubble = document.createElement("div");
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      bubble.className = role === "user"
+        ? "self-end bg-blue-500 text-white rounded-lg px-4 py-2 max-w-[80%]"
+        : "self-start bg-gray-300 dark:bg-gray-600 text-black dark:text-white rounded-lg px-4 py-2 max-w-[80%]";
+      const messageText = document.createElement("pre");
+      const timeLabel = document.createElement("div");
+      timeLabel.className = "text-xs mt-1 text-gray-500";
+      timeLabel.innerText = timestamp;
+      if (animated) {
+        typeText(messageText, text);
+      } else {
+        messageText.innerText = text;
+      }
+      bubble.appendChild(messageText);
+      bubble.appendChild(timeLabel);
+      chat.appendChild(bubble);
+      chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+    }
+
+    function typeText(el, text, i = 0) {
+      if (i < text.length) {
+        el.innerText += text[i];
+        setTimeout(() => typeText(el, text, i + 1), 15);
+      }
+    }
+
+    async function sendDebate() {
+      const topic = document.getElementById("topic").value.trim();
+      const argument = document.getElementById("argument").value.trim();
+      const tone = document.getElementById("tone").value;
+
+      if (!topic || !argument) {
+        alert("Please enter both a topic and an argument.");
+        return;
+      }
+
+      addMessage("user", argument);
+      messages.push({ role: "user", content: argument });
+
+      const thinking = document.createElement("div");
+      thinking.className = "self-start italic text-gray-500";
+      thinking.innerText = "🤖 Thinking...";
+      chat.appendChild(thinking);
+      chat.scrollTop = chat.scrollHeight;
+
+      document.getElementById("argument").value = "";
+
+      try {
+        const res = await fetch("http://localhost:8000/debate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topic, messages, tone }),
+        });
+
+        const data = await res.json();
+        chat.removeChild(thinking);
+        addMessage("assistant", data.response, true);
+        messages.push({ role: "assistant", content: data.response });
+      } catch (err) {
+        thinking.innerText = "❌ Error reaching backend.";
+        console.error(err);
+      }
+    }
+
+    function saveTopic() {
+      const name = document.getElementById("topicName").value.trim();
+      if (!name) return alert("Give your topic a name.");
+      localStorage.setItem("debate_" + name, JSON.stringify(messages));
+      updateTopicList();
+      saveStatus.classList.remove("hidden");
+      setTimeout(() => saveStatus.classList.add("hidden"), 1500);
+    }
+
+    function updateTopicList() {
+      const list = document.getElementById("topicList");
+      list.innerHTML = '<option value="">📂 Load Previous Topic</option>';
+      for (let key in localStorage) {
+        if (key.startsWith("debate_")) {
+          const opt = document.createElement("option");
+          opt.value = key.replace("debate_", "");
+          opt.innerText = opt.value;
+          list.appendChild(opt);
+        }
+      }
+    }
+
+    function loadTopic() {
+      const name = document.getElementById("topicList").value;
+      if (!name) return;
+      const stored = localStorage.getItem("debate_" + name);
+      if (!stored) return;
+      messages = JSON.parse(stored);
+      chat.innerHTML = "";
+      messages.forEach(m => addMessage(m.role, m.content));
+    }
+
+    function clearChat() {
+      chat.innerHTML = "";
+      messages = [];
+      document.getElementById("topic").value = "";
+      document.getElementById("argument").value = "";
+    }
+
+    // Load saved topics on startup
+    updateTopicList();
+
+    // Press Enter to send, Shift+Enter for newline
+    document.getElementById("argument").addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendDebate();
+      }
+    });
+  </script>
+</body>
+</html>
