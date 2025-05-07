@@ -124,7 +124,7 @@
       document.getElementById("argument").value = "";
 
       try {
-        const res = await fetch("https://nba-debate-ai.onrender.com", {
+        const res = await fetch("https://nba-debate-ai.onrender.com/debate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ topic, messages, tone }),
