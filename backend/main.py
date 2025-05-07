@@ -136,4 +136,5 @@ async def debate(request: DebateRequest):
         return {"response": response.choices[0].message.content}
 
     except Exception as e:
+        print("🔥 Backend Error:", e)
         raise HTTPException(status_code=500, detail=f"OpenAI API error: {e}")
