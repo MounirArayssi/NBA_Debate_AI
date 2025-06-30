@@ -6,23 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    pre {
-     white-space: pre-wrap;
-    word-wrap: break-word;
-    }
-    #chat::-webkit-scrollbar {
-      width: 8px;
-    }
-    #chat::-webkit-scrollbar-track {
-      background-color: #f1f1f1;
-    }
-    #chat::-webkit-scrollbar-thumb {
-      background-color: #888;
-      border-radius: 4px;
-    }
-    #chat::-webkit-scrollbar-thumb:hover {
-      background-color: #555;
-    }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+    #chat::-webkit-scrollbar { width: 8px; }
+    #chat::-webkit-scrollbar-track { background-color: #f1f1f1; }
+    #chat::-webkit-scrollbar-thumb { background-color: #888; border-radius: 4px; }
+    #chat::-webkit-scrollbar-thumb:hover { background-color: #555; }
   </style>
 </head>
 <body class="bg-gray-100 text-black dark:bg-gray-900 dark:text-white transition-colors min-h-screen flex flex-col items-center p-4">
@@ -124,7 +112,7 @@
       document.getElementById("argument").value = "";
 
       try {
-        const res = await fetch("https://nba-debate-ai.onrender.com/debate", {
+        const res = await fetch("http://localhost:8000/debate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ topic, messages, tone }),
@@ -179,10 +167,7 @@
       document.getElementById("argument").value = "";
     }
 
-    // Load saved topics on startup
     updateTopicList();
-
-    // Press Enter to send, Shift+Enter for newline
     document.getElementById("argument").addEventListener("keydown", e => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();

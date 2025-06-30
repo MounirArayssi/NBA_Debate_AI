@@ -27,7 +27,7 @@ class DebateRequest(BaseModel):
     messages: list
     tone: str  # "trash", "analyst", "stats", or default
 
-# 🏀 Standings
+# Standings
 def fetch_standings():
     context = "Top Teams in 2024–25 Season:\n"
     try:
@@ -40,7 +40,7 @@ def fetch_standings():
     except Exception as e:
         return f"⚠️ Error fetching standings: {e}"
 
-# 📊 Top scorers
+# Top scorers
 def fetch_top_scorers():
     try:
         leaders = leagueleaders.LeagueLeaders(stat_category_abbreviation="PTS", season="2024-25", season_type_all_star="Regular Season")
@@ -49,7 +49,7 @@ def fetch_top_scorers():
     except Exception as e:
         return f"⚠️ Error fetching scoring leaders: {e}"
 
-# 📊 PTS, AST, REB leaders
+# PTS, AST, REB leaders
 def fetch_all_around_stats():
     try:
         df = leaguedashplayerstats.LeagueDashPlayerStats(season="2024-25").get_data_frames()[0]
@@ -61,7 +61,7 @@ def fetch_all_around_stats():
     except Exception as e:
         return f"⚠️ Error fetching all-around stats: {e}"
 
-# 🔍 Individual player stats
+# Individual player stats
 def get_player_stats(name):
     try:
         match = players.find_players_by_full_name(name)
